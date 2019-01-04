@@ -15,10 +15,6 @@ RSpec.describe Spree::Order, type: :model do
   end
   let(:code) { promotion.codes.first }
 
-  before do
-    allow(Spree::LegacyUser).to receive_messages(current: mock_model(Spree::LegacyUser, id: 123))
-  end
-
   context '#store' do
     it { is_expected.to respond_to(:store) }
 
@@ -324,7 +320,7 @@ RSpec.describe Spree::Order, type: :model do
     end
   end
 
-  context "add_update_hook" do
+  context "add_update_hook", partial_double_verification: false do
     before do
       Spree::Order.class_eval do
         register_update_hook :add_awesome_sauce
@@ -379,13 +375,13 @@ RSpec.describe Spree::Order, type: :model do
 
         it "does nothing if any shipments are ready" do
           shipment = create(:shipment, order: subject, state: "ready")
-          expect { subject.ensure_updated_shipments }.not_to change { subject.reload.shipments }
+          expect { subject.ensure_updated_shipments }.not_to change { subject.reload.shipments.pluck(:id) }
           expect { shipment.reload }.not_to raise_error
         end
 
         it "does nothing if any shipments are shipped" do
           shipment = create(:shipment, order: subject, state: "shipped")
-          expect { subject.ensure_updated_shipments }.not_to change { subject.reload.shipments }
+          expect { subject.ensure_updated_shipments }.not_to change { subject.reload.shipments.pluck(:id) }
           expect { shipment.reload }.not_to raise_error
         end
       end
@@ -712,7 +708,7 @@ RSpec.describe Spree::Order, type: :model do
       expect(order.find_line_item_by_variant(mock_model(Spree::Variant))).to be_nil
     end
 
-    context "match line item with options" do
+    context "match line item with options", partial_double_verification: false do
       before do
         Spree::Order.register_line_item_comparison_hook(:foos_match)
       end
@@ -1072,7 +1068,7 @@ RSpec.describe Spree::Order, type: :model do
 
     context 'an old-style refund exists' do
       let(:order) { create(:order_ready_to_ship) }
-      let(:payment) { order.payments.first.tap { |p| allow(p).to receive_messages(profiles_supported: false) } }
+      let(:payment) { order.payments.first.tap { |p| allow(p).to receive_messages(profiles_supported?: false) } }
       let!(:refund_payment) {
         build(:payment, amount: -1, order: order, state: 'completed', source: payment).tap do |p|
           allow(p).to receive_messages(profiles_supported?: false)
@@ -1102,11 +1098,12 @@ RSpec.describe Spree::Order, type: :model do
 
     it "raises an error if any shipments are ready" do
       shipment = create(:shipment, order: subject, state: "ready")
+
       expect {
         expect {
           subject.create_proposed_shipments
         }.to raise_error(Spree::Order::CannotRebuildShipments)
-      }.not_to change { subject.reload.shipments }
+      }.not_to change { subject.reload.shipments.pluck(:id) }
 
       expect { shipment.reload }.not_to raise_error
     end
@@ -1117,7 +1114,7 @@ RSpec.describe Spree::Order, type: :model do
         expect {
           subject.create_proposed_shipments
         }.to raise_error(Spree::Order::CannotRebuildShipments)
-      }.not_to change { subject.reload.shipments }
+      }.not_to change { subject.reload.shipments.pluck(:id) }
 
       expect { shipment.reload }.not_to raise_error
     end

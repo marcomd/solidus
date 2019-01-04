@@ -1,4 +1,5 @@
 Spree.onCouponCodeApply = function(e) {
+  e.preventDefault();
   var couponCodeField = $("#order_coupon_code");
   var couponCode = $.trim(couponCodeField.val());
   if (couponCode === "") {
@@ -13,7 +14,7 @@ Spree.onCouponCodeApply = function(e) {
     coupon_code: couponCode
   };
   var req = Spree.ajax({
-    method: "PUT",
+    method: 'POST',
     url: Spree.routes.apply_coupon_code(Spree.current_order_id),
     data: JSON.stringify(data),
     contentType: "application/json"

@@ -31,8 +31,8 @@ module Spree
     preference :address_requires_state, :boolean, default: true
 
     # @!attribute [rw] admin_interface_logo
-    #   @return [String] URL of logo used in admin (default: +'logo/solidus_logo.png'+)
-    preference :admin_interface_logo, :string, default: 'logo/solidus_logo.png'
+    #   @return [String] URL of logo used in admin (default: +'logo/solidus.svg'+)
+    preference :admin_interface_logo, :string, default: 'logo/solidus.svg'
 
     # @!attribute [rw] admin_products_per_page
     #   @return [Integer] Number of products to display in admin (default: +10+)
@@ -142,8 +142,8 @@ module Spree
     preference :layout, :string, default: 'spree/layouts/spree_application'
 
     # @!attribute [rw] logo
-    #   @return [String] URL of logo used on frontend (default: +'logo/solidus_logo.png'+)
-    preference :logo, :string, default: 'logo/solidus_logo.png'
+    #   @return [String] URL of logo used on frontend (default: +'logo/solidus.svg'+)
+    preference :logo, :string, default: 'logo/solidus.svg'
 
     # @!attribute [rw] order_bill_address_used
     #   @return [Boolean] Use the order's bill address, as opposed to storing
@@ -295,6 +295,8 @@ module Spree
     # promotion_chooser_class allows extensions to provide their own PromotionChooser
     class_name_attribute :promotion_chooser_class, default: 'Spree::PromotionChooser'
 
+    class_name_attribute :allocator_class, default: 'Spree::Stock::Allocator::OnHandFirst'
+
     class_name_attribute :shipping_rate_sorter_class, default: 'Spree::Stock::ShippingRateSorter'
 
     class_name_attribute :shipping_rate_selector_class, default: 'Spree::Stock::ShippingRateSelector'
@@ -306,6 +308,32 @@ module Spree
     #   Spree::TaxCalculator::ShippingRate
     # @api experimental
     class_name_attribute :shipping_rate_tax_calculator_class, default: 'Spree::TaxCalculator::ShippingRate'
+
+    # Allows providing your own Mailer for order mailer.
+    #
+    # @!attribute [rw] order_mailer_class
+    # @return [ActionMailer::Base] an object that responds to "confirm_email",
+    #   "cancel_email" and "inventory_cancellation_email"
+    #   (e.g. an ActionMailer with a "confirm_email" method) with the same
+    #   signature as Spree::OrderMailer.confirm_email.
+    class_name_attribute :order_mailer_class, default: 'Spree::OrderMailer'
+
+    # Allows providing your own Mailer for promotion code batch mailer.
+    #
+    # @!attribute [rw] promotion_code_batch_mailer_class
+    # @return [ActionMailer::Base] an object that responds to "promotion_code_batch_finished",
+    #   and "promotion_code_batch_errored"
+    #   (e.g. an ActionMailer with a "promotion_code_batch_finished" method) with the same
+    #   signature as Spree::PromotionCodeBatchMailer.promotion_code_batch_finished.
+    class_name_attribute :promotion_code_batch_mailer_class, default: 'Spree::PromotionCodeBatchMailer'
+
+    # Allows providing your own Mailer for reimbursement mailer.
+    #
+    # @!attribute [rw] reimbursement_mailer_class
+    # @return [ActionMailer::Base] an object that responds to "reimbursement_email"
+    #   (e.g. an ActionMailer with a "reimbursement_email" method) with the same
+    #   signature as Spree::ReimbursementMailer.reimbursement_email.
+    class_name_attribute :reimbursement_mailer_class, default: 'Spree::ReimbursementMailer'
 
     # Allows providing your own Mailer for shipped cartons.
     #
@@ -380,6 +408,20 @@ module Spree
     # @return [Class] a class that provides a `#parameterize` method that
     # returns a String
     class_name_attribute :taxon_url_parametizer_class, default: 'ActiveSupport::Inflector'
+
+    # Allows providing your own class for image galleries on Variants
+    #
+    # @!attribute [rw] variant_gallery_class
+    # @return [Class] a class that implements an `images` method and returns an
+    # Enumerable of images adhering to the present_image_class interface
+    class_name_attribute :variant_gallery_class, default: 'Spree::Gallery::VariantGallery'
+
+    # Allows providing your own class for image galleries on Products
+    #
+    # @!attribute [rw] product_gallery_class
+    # @return [Class] a class that implements an `images` method and returns an
+    # Enumerable of images adhering to the present_image_class interface
+    class_name_attribute :product_gallery_class, default: 'Spree::Gallery::ProductGallery'
 
     # Allows providing your own class instance for generating order numbers.
     #

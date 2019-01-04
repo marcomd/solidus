@@ -1,28 +1,20 @@
 <%= render partial: 'spree/shared/error_messages', locals: { target: @promotion } %>
-<fieldset class="form-group no-border-bottom">
-  <legend><%= t '.general' %></legend>
-
+<fieldset class="form-group no-border-bottom no-border-top">
   <div class="row">
     <div id="general_fields" class="col-9">
       <div class="row">
-        <div class="col-3">
+        <div class="col-12">
           <%= f.field_container :name do %>
             <%= f.label :name, class: 'required' %>
             <%= f.text_field :name, class: 'fullwidth', required: true %>
           <% end %>
 
-          <%= f.field_container :advertise do %>
-            <label>
-              <%= f.check_box :advertise %>
-              <%= Spree::Promotion.human_attribute_name :advertise %>
-            </label>
-          <% end %>
-        </div>
-
-        <div class="col-9">
           <%= f.field_container :description do %>
             <%= f.label :description %><br />
             <%= f.text_area :description, rows: 7, class: 'fullwidth' %>
+            <span class="info">
+              <%= t('spree.character_limit') %>
+            </span>
           <% end %>
 
           <%= f.field_container :category do %>

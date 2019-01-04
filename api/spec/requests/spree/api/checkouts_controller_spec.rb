@@ -329,8 +329,7 @@ module Spree
       it "returns the order if the order is already complete" do
         order.update_columns(completed_at: Time.current, state: 'complete')
         put spree.api_checkout_path(order.to_param), params: { order_token: order.guest_token }
-        expect(json_response['number']).to eq(order.number)
-        expect(response.status).to eq(200)
+        assert_unauthorized!
       end
 
       # Regression test for https://github.com/spree/spree/issues/3784
@@ -358,6 +357,7 @@ module Spree
       end
 
       it "can apply a coupon code to an order" do
+        expect(Spree::Deprecation).to receive(:warn)
         order.update_column(:state, "payment")
         expect(PromotionHandler::Coupon).to receive(:new).with(order).and_call_original
         expect_any_instance_of(PromotionHandler::Coupon).to receive(:apply).and_return({ coupon_applied?: true })
@@ -366,6 +366,7 @@ module Spree
       end
 
       it "renders error failing to apply coupon" do
+        expect(Spree::Deprecation).to receive(:warn)
         order.update_column(:state, "payment")
         put spree.api_checkout_path(order.to_param), params: { order_token: order.guest_token, order: { coupon_code: "foobar" } }
         expect(response.status).to eq(422)

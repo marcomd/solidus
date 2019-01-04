@@ -27,7 +27,7 @@ RSpec.describe Spree::Product, type: :model do
         expect(clone.images.size).to eq(product.images.size)
       end
 
-      it 'calls #duplicate_extra' do
+      it 'calls #duplicate_extra', partial_double_verification: false do
         expect_any_instance_of(Spree::Product).to receive(:duplicate_extra) do |product, old_product|
           product.name = old_product.name.reverse
         end
@@ -570,6 +570,15 @@ RSpec.describe Spree::Product, type: :model do
         expect(product.master.sku).to eq 'FOO'
         expect(product.sku).to eq 'FOO'
       end
+    end
+  end
+
+  describe '#gallery' do
+    let(:product) { Spree::Product.new }
+    subject { product.gallery }
+
+    it 'responds to #images' do
+      expect(subject).to respond_to(:images)
     end
   end
 end

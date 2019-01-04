@@ -18,6 +18,7 @@ module Spree
     accepts_nested_attributes_for :return_items, allow_destroy: true
 
     before_create :generate_number
+    before_create :calculate_total
 
     scope :reimbursed, -> { where(reimbursement_status: 'reimbursed') }
 
@@ -98,12 +99,15 @@ module Spree
       total - paid_amount
     end
 
-    def perform!
+    def perform!(created_by: nil)
+      unless created_by
+        Spree::Deprecation.warn("Calling #perform on #{self} without created_by is deprecated")
+      end
       reimbursement_tax_calculator.call(self)
       reload
       update!(total: calculated_total)
 
-      reimbursement_performer.perform(self)
+      reimbursement_performer.perform(self, created_by: created_by)
 
       if unpaid_amount_within_tolerance?
         reimbursed!
@@ -116,12 +120,15 @@ module Spree
       end
     end
 
-    def simulate
+    def simulate(created_by: nil)
+      unless created_by
+        Spree::Deprecation.warn("Calling #simulate on #{self} without created_by is deprecated")
+      end
       reimbursement_simulator_tax_calculator.call(self)
       reload
       update!(total: calculated_total)
 
-      reimbursement_performer.simulate(self)
+      reimbursement_performer.simulate(self, created_by: created_by)
     end
 
     def return_items_requiring_exchange
@@ -139,14 +146,22 @@ module Spree
     # Accepts all return items, saves the reimbursement, and performs the reimbursement
     #
     # @api public
+    # @param [Spree.user_class] created_by the user that is performing this action
     # @return [void]
-    def return_all
+    def return_all(created_by: nil)
+      unless created_by
+        Spree::Deprecation.warn("Calling #return_all on #{self} without created_by is deprecated")
+      end
       return_items.each(&:accept!)
       save!
-      perform!
+      perform!(created_by: created_by)
     end
 
     private
+
+    def calculate_total
+      self.total ||= calculated_total
+    end
 
     def generate_number
       self.number ||= loop do
@@ -162,7 +177,7 @@ module Spree
     end
 
     def send_reimbursement_email
-      Spree::ReimbursementMailer.reimbursement_email(id).deliver_later
+      Spree::Config.reimbursement_mailer_class.reimbursement_email(id).deliver_later
     end
 
     # If there are multiple different reimbursement types for a single

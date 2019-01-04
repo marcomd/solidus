@@ -79,7 +79,7 @@ module Spree
 
     validates :cost_price, numericality: { greater_than_or_equal_to: 0, allow_nil: true }
     validates :price,      numericality: { greater_than_or_equal_to: 0, allow_nil: true }
-    validates_uniqueness_of :sku, allow_blank: true, unless: :deleted_at
+    validates_uniqueness_of :sku, allow_blank: true, if: :enforce_unique_sku?
 
     after_create :create_stock_items
     after_create :set_position
@@ -381,6 +381,7 @@ module Spree
     #   not from this variant
     # @return [Spree::Image] the image to display
     def display_image(fallback: true)
+      Spree::Deprecation.warn('Spree::Variant#display_image is DEPRECATED. Choose an image from Spree::Variant#gallery instead')
       images.first || (fallback && product.variant_images.first) || Spree::Image.new
     end
 
@@ -392,6 +393,14 @@ module Spree
       product.variant_property_rules.map do |rule|
         rule.values if rule.applies_to_variant?(self)
       end.flatten.compact
+    end
+
+    # The gallery for the variant, which represents all the images
+    # associated with it
+    #
+    # @return [Spree::Gallery] the media for a variant
+    def gallery
+      @gallery ||= Spree::Config.variant_gallery_class.new(self)
     end
 
     private
@@ -449,6 +458,10 @@ module Spree
 
     def destroy_option_values_variants
       option_values_variants.destroy_all
+    end
+
+    def enforce_unique_sku?
+      !deleted_at
     end
   end
 end

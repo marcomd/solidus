@@ -3,6 +3,28 @@
 require 'rails_helper'
 
 RSpec.describe Spree::Reimbursement, type: :model do
+  describe ".create" do
+    let(:customer_return) { create(:customer_return) }
+    let(:order) { customer_return.order }
+    let(:reimbursement) { build(:reimbursement, order: order) }
+
+    subject { reimbursement.save }
+
+    context "when total is not present" do
+      before do
+        allow(reimbursement).to receive(:calculated_total) { 100 }
+      end
+
+      it { expect { subject }.to change(reimbursement, :total).from(nil).to(100.0) }
+    end
+
+    context "when total is present" do
+      let(:reimbursement) { build(:reimbursement, order: order, total: 10) }
+
+      it { expect { subject }.not_to change(reimbursement, :total).from(10) }
+    end
+  end
+
   describe ".before_create" do
     describe "#generate_number" do
       context "number is assigned" do
@@ -66,8 +88,9 @@ RSpec.describe Spree::Reimbursement, type: :model do
     let!(:default_refund_reason) { Spree::RefundReason.find_or_create_by!(name: Spree::RefundReason::RETURN_PROCESSING_REASON, mutable: false) }
 
     let(:reimbursement) { create(:reimbursement, customer_return: customer_return, order: order, return_items: [return_item]) }
+    let(:created_by_user) { create(:user, email: 'user@email.com') }
 
-    subject { reimbursement.perform! }
+    subject { reimbursement.perform!(created_by: created_by_user) }
 
     before do
       order.shipments.each do |shipment|
@@ -230,13 +253,14 @@ RSpec.describe Spree::Reimbursement, type: :model do
   end
 
   describe "#return_all" do
-    subject { reimbursement.return_all }
+    subject { reimbursement.return_all(created_by: created_by_user) }
 
     let!(:default_refund_reason) { Spree::RefundReason.find_or_create_by!(name: Spree::RefundReason::RETURN_PROCESSING_REASON, mutable: false) }
     let(:order)                  { create(:shipped_order, line_items_count: 1) }
     let(:inventory_unit)         { order.inventory_units.first }
     let(:return_item)            { build(:return_item, inventory_unit: inventory_unit) }
     let(:reimbursement)          { build(:reimbursement, order: order, return_items: [return_item]) }
+    let(:created_by_user) { create(:user, email: 'user@email.com') }
 
     it "accepts all the return items" do
       expect { subject }.to change { return_item.acceptance_status }.to "accepted"

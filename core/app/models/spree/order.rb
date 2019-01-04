@@ -138,7 +138,6 @@ module Spree
       find_by! number: value
     end
 
-    delegate :update_totals, :persist_totals, to: :updater
     delegate :firstname, :lastname, to: :bill_address, prefix: true, allow_nil: true
     alias_method :billing_firstname, :bill_address_firstname
     alias_method :billing_lastname, :bill_address_lastname
@@ -448,7 +447,7 @@ module Spree
     end
 
     def deliver_order_confirmation_email
-      Spree::OrderMailer.confirm_email(self).deliver_later
+      Spree::Config.order_mailer_class.confirm_email(self).deliver_later
       update_column(:confirmation_delivered, true)
     end
 
@@ -552,6 +551,7 @@ module Spree
       Spree::PromotionHandler::Shipping.new(self).activate
       recalculate
     end
+    alias_method :apply_free_shipping_promotions, :apply_shipping_promotions
     deprecate apply_free_shipping_promotions: :apply_shipping_promotions, deprecator: Spree::Deprecation
 
     # Clean shipments and make order back to address state
@@ -889,7 +889,7 @@ module Spree
     end
 
     def send_cancel_email
-      Spree::OrderMailer.cancel_email(self).deliver_later
+      Spree::Config.order_mailer_class.cancel_email(self).deliver_later
     end
 
     def after_resume

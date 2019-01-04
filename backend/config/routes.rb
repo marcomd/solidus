@@ -16,7 +16,7 @@ Spree::Core::Engine.routes.draw do
     resources :promotions do
       resources :promotion_rules
       resources :promotion_actions
-      resources :promotion_codes, only: [:index]
+      resources :promotion_codes, only: [:index, :new, :create]
       resources :promotion_code_batches, only: [:index, :new, :create] do
         get '/download', to: "promotion_code_batches#download", defaults: { format: "csv" }
       end
@@ -138,13 +138,6 @@ Spree::Core::Engine.routes.draw do
     resources :taxons, only: [:index, :show] do
       collection do
         get :search
-      end
-    end
-
-    resources :reports, only: [:index] do
-      collection do
-        get :sales_total
-        post :sales_total
       end
     end
 
