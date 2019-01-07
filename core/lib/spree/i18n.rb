@@ -26,10 +26,11 @@ module Spree
     # extra functionality. e.g return reasonable strings for missing translations
 
     def translate(key, options = {})
-      Spree::Deprecation.warn <<-WARN.squish
-        Spree.t & Spree.translate have been deprecated.
-        Instead use I18n.t('spree.your_translation_key')
-      WARN
+      # Marcomd: This warn is always shown
+      # Spree::Deprecation.warn <<-WARN.squish
+      #   Spree.t & Spree.translate have been deprecated.
+      #   Instead use I18n.t('spree.your_translation_key')
+      # WARN
       options[:scope] = [:spree, *options[:scope]]
       TranslationHelperWrapper.new.translate(key, options)
     end
