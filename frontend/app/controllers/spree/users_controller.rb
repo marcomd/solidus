@@ -18,7 +18,7 @@ class Spree::UsersController < Spree::StoreController
   end
 
   def accurate_title
-    Spree.t(:my_account)
+    I18n.t('spree.my_account')
   end
 
 end
